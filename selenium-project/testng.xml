@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!--
+  Default suite — runs all scenarios in parallel on a single browser.
+  Browser defaults to "chrome" (see CucumberRunner @BeforeTest).
+  Override: mvn test -Dbrowser=safari
+-->
+<suite name="Altoro Banking QA" verbose="1">
+  <test name="Altoro Tests">
+    <classes>
+      <class name="com.demoqa.runners.CucumberRunner"/>
+    </classes>
+  </test>
+</suite>

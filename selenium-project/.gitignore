@@ -1,0 +1,16 @@
+# Build output
+target/
+*.class
+
+# Test artifacts (regenerated on each run)
+reports/
+screenshots/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.DS_Store
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        GROUP ID  : like a company/team namespace. Convention: reverse domain name.
+        ARTIFACT  : the name of this specific project.
+        VERSION   : 1.0-SNAPSHOT means "version 1.0, still in development".
+    -->
+    <groupId>com.demoqa</groupId>
+    <artifactId>altoro-banking-qa</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>DemoQA Selenium Java Automation Framework</name>
+    <description>
+        Production-grade UI automation framework using Java, Selenium WebDriver 4,
+        Cucumber BDD, Gherkin, TestNG, and ExtentReports.
+        Target: Altoro Mutual Banking Application (http://demo.testfire.net)
+    </description>
+
+    <!-- ─────────────────────────────────────────────────────────────────
+         PROPERTIES — Central place to define versions.
+         WHY: If you need to upgrade Selenium from 4.18 to 4.20,
+         you change ONE line here instead of hunting through the whole file.
+    ───────────────────────────────────────────────────────────────────── -->
+    <properties>
+        <java.version>17</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Dependency versions — change here to upgrade anywhere -->
+        <selenium.version>4.21.0</selenium.version>
+        <cucumber.version>7.18.0</cucumber.version>
+        <testng.version>7.10.2</testng.version>
+        <extentreports.version>5.1.1</extentreports.version>
+        <webdrivermanager.version>5.8.0</webdrivermanager.version>
+        <slf4j.version>2.0.13</slf4j.version>
+        <browser>chrome</browser>
+        <headless>false</headless>
+    </properties>
+
+    <!-- ─────────────────────────────────────────────────────────────────
+         DEPENDENCIES — The libraries our project needs.
+         Maven downloads these automatically from the internet
+         into a local cache (~/.m2 folder) the first time you build.
+    ───────────────────────────────────────────────────────────────────── -->
+    <dependencies>
+
+        <!-- ── 1. SELENIUM WEBDRIVER ──────────────────────────────────
+             The core browser automation library.
+             selenium-java includes WebDriver + support for Chrome, Firefox, etc.
+        -->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>${selenium.version}</version>
+        </dependency>
+
+        <!-- ── 2. WEBDRIVERMANAGER ────────────────────────────────────
+             Automatically downloads and manages the correct ChromeDriver version.
+             WITHOUT this: you'd manually download chromedriver, match the version
+             to your Chrome, and put it on PATH. Very painful.
+             WITH this: one line of code handles everything.
+        -->
+        <dependency>
+            <groupId>io.github.bonigarcia</groupId>
+            <artifactId>webdrivermanager</artifactId>
+            <version>${webdrivermanager.version}</version>
+        </dependency>
+
+        <!-- ── 3. CUCUMBER (BDD Framework) ───────────────────────────
+             cucumber-java   : connects Gherkin steps to Java methods
+             cucumber-testng : integrates Cucumber with TestNG test runner
+        -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-java</artifactId>
+            <version>${cucumber.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-testng</artifactId>
+            <version>${cucumber.version}</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-picocontainer</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- ── 4. TESTNG ──────────────────────────────────────────────
+             The test runner. Runs tests, reports pass/fail,
+             supports parallel execution, grouping, retries.
+             scope=test means it is only needed at test time, not in production.
+        -->
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${testng.version}</version>
+        </dependency>
+
+        <!-- ── 5. EXTENTREPORTS ───────────────────────────────────────
+             Generates a beautiful, detailed HTML test report with:
+             - Pass/fail status per scenario
+             - Step-by-step execution log
+             - Screenshots embedded on failure
+             - Charts showing overall test health
+             This is what you show recruiters and POs.
+        -->
+        <dependency>
+            <groupId>com.aventstack</groupId>
+            <artifactId>extentreports</artifactId>
+            <version>${extentreports.version}</version>
+        </dependency>
+
+        <!-- ── 6. SLF4J LOGGING ───────────────────────────────────────
+             Logging framework. Keeps noisy Selenium/WebDriverManager
+             output clean in the console. Standard in every Java project.
+        -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+    </dependencies>
+
+    <!-- ─────────────────────────────────────────────────────────────────
+         BUILD — Tells Maven HOW to compile and run tests.
+    ───────────────────────────────────────────────────────────────────── -->
+    <build>
+        <plugins>
+
+            <!-- ── Maven Compiler Plugin ──────────────────────────────
+                 Compiles our Java code.
+                 We target Java 17 syntax even though we run on Java 22.
+                 This is standard — it means our code is compatible with
+                 any JDK 17 or newer.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+
+            <!-- ── Maven Surefire Plugin ──────────────────────────────
+                 This is what runs your tests when you type `mvn test`.
+                 We point it at our CucumberRunner class.
+                 We also pass in Cucumber options here.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <suiteXmlFiles>
+                        <suiteXmlFile>${testng.suite}</suiteXmlFile>
+                    </suiteXmlFiles>
+                    <systemPropertyVariables>
+                        <browser>${browser}</browser>
+                        <headless>${headless}</headless>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+    <!-- ─────────────────────────────────────────────────────────────────
+         PROFILES — Select browser or run mode from the command line.
+
+         Single browser (default: chrome):
+           mvn test
+           mvn test -Psafari
+           mvn test -Pedge
+
+         Cross-browser parallel (Chrome + Safari + Edge simultaneously):
+           mvn test -Pcross-browser
+    ───────────────────────────────────────────────────────────────────── -->
+    <profiles>
+
+        <profile>
+            <id>chrome</id>
+            <activation><activeByDefault>true</activeByDefault></activation>
+            <properties>
+                <browser>chrome</browser>
+                <testng.suite>testng.xml</testng.suite>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>safari</id>
+            <properties>
+                <browser>safari</browser>
+                <testng.suite>testng.xml</testng.suite>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>edge</id>
+            <properties>
+                <browser>edge</browser>
+                <testng.suite>testng.xml</testng.suite>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>cross-browser</id>
+            <properties>
+                <testng.suite>testng-cross-browser.xml</testng.suite>
+            </properties>
+        </profile>
+
+    </profiles>
+
+</project>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!--
+  Cross-browser suite — runs the full scenario set in parallel across
+  Chrome, Safari, and Edge. Each <test> block is a separate browser
+  session; TestNG runs them concurrently (thread-count="3").
+
+  Safari prerequisite (macOS only):
+    Open Safari → Develop menu → Allow Remote Automation
+
+  Run:
+    mvn test -Pcross-browser
+-->
+<suite name="Cross-Browser Suite" parallel="tests" thread-count="3" verbose="1">
+
+  <test name="Chrome">
+    <parameter name="browser" value="chrome"/>
+    <classes>
+      <class name="com.demoqa.runners.CucumberRunner"/>
+    </classes>
+  </test>
+
+  <test name="Safari">
+    <parameter name="browser" value="safari"/>
+    <classes>
+      <class name="com.demoqa.runners.CucumberRunner"/>
+    </classes>
+  </test>
+
+  <test name="Edge">
+    <parameter name="browser" value="edge"/>
+    <classes>
+      <class name="com.demoqa.runners.CucumberRunner"/>
+    </classes>
+  </test>
+
+</suite>

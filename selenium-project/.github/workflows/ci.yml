@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: ${{ matrix.browser }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - browser: chrome
+            os: ubuntu-latest
+          - browser: edge
+            os: ubuntu-latest
+          - browser: safari
+            os: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Enable Safari Remote Automation
+        if: matrix.browser == 'safari'
+        run: sudo safaridriver --enable
+
+      - name: Run smoke tests — ${{ matrix.browser }}
+        run: mvn test -Dcucumber.filter.tags="@smoke" -Dbrowser=${{ matrix.browser }} -Dheadless=${{ matrix.browser != 'safari' }}
+        continue-on-error: ${{ matrix.browser == 'safari' }}
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-${{ matrix.browser }}
+          path: |
+            reports/
+            screenshots/
+          retention-days: 7
