@@ -53,31 +53,33 @@ public class DriverManager {
 
         switch (browser) {
             case "chrome" -> {
-                // WebDriverManager downloads the correct ChromeDriver automatically
-                // No manual driver setup needed — this is why we added it to pom.xml
                 WebDriverManager.chromedriver().setup();
                 ChromeOptions options = new ChromeOptions();
-                if (headless) {
-                    // Headless = no visible browser window
-                    // Used in CI/CD pipelines where there is no screen
-                    options.addArguments("--headless=new");
-                }
+                if (headless) options.addArguments("--headless=new");
                 options.addArguments("--window-size=1280,800");
                 options.addArguments("--disable-extensions");
                 options.addArguments("--no-sandbox");
                 options.addArguments("--disable-dev-shm-usage");
+                // Accept confirm/alert dialogs automatically so form-submission prompts
+                // (e.g. the Altoro Mutual transfer confirmation) don't block tests.
+                options.setUnhandledPromptBehaviour(
+                        org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT);
                 webDriver = new ChromeDriver(options);
             }
             case "firefox" -> {
                 WebDriverManager.firefoxdriver().setup();
                 FirefoxOptions options = new FirefoxOptions();
                 if (headless) options.addArguments("--headless");
+                options.setUnhandledPromptBehaviour(
+                        org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT);
                 webDriver = new FirefoxDriver(options);
             }
             case "edge" -> {
                 WebDriverManager.edgedriver().setup();
                 EdgeOptions options = new EdgeOptions();
                 if (headless) options.addArguments("--headless=new");
+                options.setUnhandledPromptBehaviour(
+                        org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT);
                 webDriver = new EdgeDriver(options);
             }
             case "safari" -> {

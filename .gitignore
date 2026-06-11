@@ -1,4 +1,17 @@
-node_modules/
-test-results/
-playwright-report/
-.playwright/
+# Credentials — never commit
+.env
+
+# Playwright
+playwright/node_modules/
+playwright/test-results/
+playwright/playwright-report/
+playwright/.playwright/
+
+# Selenium / Maven
+selenium-project/target/
+selenium-project/reports/
+selenium-project/screenshots/
+selenium-project/*.class
+
+# macOS
+.DS_Store

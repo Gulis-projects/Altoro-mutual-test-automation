@@ -52,14 +52,17 @@ Reports are written to `reports/cucumber-report.html` and `reports/cucumber-repo
 **`login()` vs credential entry distinction:** `LoginPage.login(username, password)` enters credentials AND clicks submit — used by `AccountSteps`/`TransferSteps` Background steps to set up a logged-in state. `LoginPage.enterUsername()` + `enterPassword()` enter credentials only — used by `LoginSteps` when the feature file controls when the button is clicked. Do not collapse these back into a single method; the distinction prevents double-clicks in scenarios that explicitly step through the button click.
 
 **Tag strategy:**
-- `@smoke` — critical path, runs on every commit
-- `@regression` — full suite, runs before release
-- `@security` — input validation / injection tests (subset of `@regression`)
-- Feature tags (`@login`, `@account`, `@transfer`, `@search`) for targeted runs
+- `@smoke` — 6 critical-path scenarios, run on every commit
+- `@regression` — 11 scenarios covering login flows, account navigation, and transfer validation, runs before release
+- `@security` — intentional vulnerability tests (SQL injection bypass, empty-password bypass); excluded from `@regression` because demo.testfire.net is intermittently vulnerable and these tests are documentation-only
+- Feature tags (`@login`, `@account`, `@transfer`) for targeted runs
 
-## Known Incomplete Code
+## Known behaviours of demo.testfire.net
 
-`TransferSteps.java` has several unimplemented step methods (empty bodies or syntax errors — `transferPage.` with nothing after it). The corresponding `TransferPage` page object methods for account selection, amount entry, submit, and result assertions need to be implemented before the `@transfer` scenarios will pass.
+- **SQL injection**: `' OR '1'='1` bypasses authentication — tested under `@security` only.
+- **Empty-password bypass**: `jsmith` with no password logs in on certain server states — tested under `@security` only.
+- **No authentication enforcement**: `main.jsp` sometimes serves unauthenticated requests; regression test verifies that after a proper logout the session IS terminated.
+- **Same-session re-login flakiness**: Attempting a second login in the same browser session immediately after Sign Off is rejected by the demo server. The suite tests session termination via protected-page access instead.
 
 ## Configuration
 

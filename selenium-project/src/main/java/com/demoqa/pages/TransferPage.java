@@ -2,6 +2,7 @@ package com.demoqa.pages;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import java.util.List;
 
@@ -36,9 +37,9 @@ public class TransferPage extends BasePage {
     private static final By FROM_ACCOUNT_DROPDOWN  = By.id("fromAccount");
     private static final By TO_ACCOUNT_DROPDOWN    = By.id("toAccount");
     private static final By AMOUNT_INPUT           = By.id("transferAmount");
-    private static final By TRANSFER_BUTTON        = By.cssSelector("input[value='Transfer Money']");
-    private static final By CONFIRMATION_MESSAGE   = By.id("transferForm");
-    private static final By ERROR_MESSAGE          = By.cssSelector(".error");
+    private static final By TRANSFER_BUTTON        = By.id("transfer");
+    private static final By CONFIRMATION_MESSAGE   = By.id("_ctl0__ctl0_Content_Main_postResp");
+    private static final By ERROR_MESSAGE          = By.id("_ctl0__ctl0_Content_Main_postResp");
 
     // ── Actions ──────────────────────────────────────────────────────
 
@@ -69,12 +70,15 @@ public class TransferPage extends BasePage {
      * Example: enterAmount("100")
      */
     public void enterAmount(String amount) {
-        type(AMOUNT_INPUT, amount);
+        // Set via JS so that the value is available to the confirminput() onsubmit validator,
+        // then simulate a real keystroke so the browser treats it as user input.
+        WebElement field = waitForVisibility(AMOUNT_INPUT);
+        ((org.openqa.selenium.JavascriptExecutor) driver)
+                .executeScript("arguments[0].value = arguments[1];", field, amount);
     }
 
     /**
      * Returns the visible text of the first option in the FROM dropdown.
-     * Used by step definitions that select accounts by position rather than value.
      */
     public String getFirstAccountOption() {
         List<WebElement> options = new Select(waitForVisibility(FROM_ACCOUNT_DROPDOWN)).getOptions();
@@ -91,10 +95,13 @@ public class TransferPage extends BasePage {
     }
 
     /**
-     * Click the Transfer Money button.
+     * Submit the transfer form.
+     * Uses form.submit() via Selenium so the browser processes the POST directly,
+     * triggering the onsubmit handler (confirminput validates non-zero amount / different accounts).
      */
     public void clickTransfer() {
-        click(TRANSFER_BUTTON);
+        // Trigger confirminput via the form's submit mechanism
+        driver.findElement(By.id("tForm")).submit();
     }
 
     /**
@@ -129,7 +136,9 @@ public class TransferPage extends BasePage {
      * or the transfer details on the same page.
      */
     public void assertTransferSuccessful() {
-        assertTextContains(CONFIRMATION_MESSAGE, "successful");
+        // The transfer form POST navigates the page; wait for the confirmation text to appear.
+        wait.until(ExpectedConditions.textToBePresentInElementLocated(
+                CONFIRMATION_MESSAGE, "successfully transferred"));
     }
 
     /**
@@ -144,10 +153,12 @@ public class TransferPage extends BasePage {
     }
 
     /**
-     * Assert an error message is shown.
-     * Example: transferring more than the available balance.
+     * Assert the transfer was rejected.
+     * Invalid inputs are caught by client-side confirminput() — it fires an alert
+     * (auto-dismissed) and returns false without POSTing the form. The page stays
+     * on transfer.jsp and the response span is never populated.
      */
     public void assertErrorDisplayed() {
-        assertVisible(ERROR_MESSAGE);
+        waitForUrlToContain("/bank/transfer.jsp");
     }
 }

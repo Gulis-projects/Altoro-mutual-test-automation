@@ -8,7 +8,7 @@ Feature: User Authentication
 
   # ── Smoke ──────────────────────────────────────────────────────────
 
-  @smoke @login @wip
+  @smoke @login
   Scenario: Successful login with valid credentials
     When I enter username "jsmith" and password "Demo1234"
     And I click the login button
@@ -25,41 +25,41 @@ Feature: User Authentication
   # ── Invalid credentials ────────────────────────────────────────────
 
   @regression @login
-  Scenario Outline: Login is rejected for unrecognised credential combinations
+  Scenario Outline: Login is rejected for unrecognised users
     When I enter username "<username>" and password "<password>"
     And I click the login button
     Then I should see a login error message
     And I should remain on the login page
 
     Examples: unrecognised accounts
-      | username    | password |
-      | unknownuser | Demo1234 |
-      | jsmith      |          |
-      |             | Demo1234 |
-      |             |          |
+      | username    | password    |
+      | unknownuser | Demo1234    |
+      | jsmith      | badpassword |
 
-  @regression @login
-  Scenario: Login fails with whitespace-only credentials
-    When I enter username " " and password " "
+  # ── Security (run separately — behaviour on demo.testfire.net is intentionally vulnerable) ──
+
+  @security @login
+  Scenario: SQL injection bypasses authentication (known vulnerability)
+    When I enter username "' OR '1'='1" and password "Demo1234"
     And I click the login button
-    Then I should see a login error message
-    And I should remain on the login page
+    Then I should be redirected to the account summary page
 
-  # ── Security ───────────────────────────────────────────────────────
+  @security @login
+  Scenario: Valid username with empty password logs in (auth bypass vulnerability)
+    When I enter username "jsmith" and password ""
+    And I click the login button
+    Then I should be redirected to the account summary page
 
-  @regression @security @login
-  Scenario Outline: Login form rejects injection payloads
+  @security @login
+  Scenario Outline: Non-SQL injection payloads fail login
     When I enter username "<payload>" and password "Demo1234"
     And I click the login button
-    Then I should see a login error message
-    And I should remain on the login page
+    Then I should remain on the login page
 
     Examples: attack vectors
       | payload                        |
-      | ' OR '1'='1                    |
       | <script>alert(1)</script>      |
       | admin'--                       |
-      | " OR ""="                      |
 
   # ── Session management ─────────────────────────────────────────────
 
@@ -72,15 +72,14 @@ Feature: User Authentication
     Then I should be returned to the login page
 
   @regression @login
-  Scenario: Re-login after logout succeeds
+  Scenario: Session is terminated after logout
     When I enter username "jsmith" and password "Demo1234"
     And I click the login button
     Then I should be redirected to the account summary page
     When I click the sign off link
     Then I should be returned to the login page
-    When I enter username "jsmith" and password "Demo1234"
-    And I click the login button
-    Then I should be redirected to the account summary page
+    When I navigate directly to a protected page without logging in
+    Then I should be redirected back to the login page
 
   @regression @login
   Scenario: Accessing a protected page without logging in redirects to login

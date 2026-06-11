@@ -28,9 +28,10 @@ public class AccountPage extends BasePage {
 
     // ── Locators ─────────────────────────────────────────────────────
     private static final By WELCOME_MESSAGE    = By.cssSelector("h1");
-    private static final By ACCOUNT_TABLE      = By.cssSelector("#onlineForm table");
-    private static final By ACCOUNT_LINKS      = By.cssSelector("#onlineForm table a");
-    private static final By ACCOUNT_ROWS       = By.cssSelector("#onlineForm table tr");
+    // #listAccounts is a <select> element populated with the user's accounts
+    private static final By ACCOUNT_SELECT     = By.id("listAccounts");
+    // Options inside the account select — one per account
+    private static final By ACCOUNT_OPTIONS    = By.cssSelector("#listAccounts option");
     private static final By NAV_MY_ACCOUNT     = By.linkText("MY ACCOUNT");
     private static final By NAV_TRANSFER       = By.linkText("Transfer Funds");
     private static final By NAV_SIGN_OFF       = By.linkText("Sign Off");
@@ -42,11 +43,13 @@ public class AccountPage extends BasePage {
     }
 
     /**
-     * Click on a specific account link by account number.
-     * Example: clickAccount("800000") navigates to that account detail.
+     * Select an account from the account dropdown by account number.
+     * Example: selectAccount("800002")
      */
-    public void clickAccount(String accountNumber) {
-        click(By.linkText(accountNumber));
+    public void selectAccount(String accountNumber) {
+        org.openqa.selenium.support.ui.Select select =
+            new org.openqa.selenium.support.ui.Select(waitForVisibility(ACCOUNT_SELECT));
+        select.selectByValue(accountNumber);
     }
 
     /**
@@ -65,12 +68,11 @@ public class AccountPage extends BasePage {
     }
 
     /**
-     * Get all account numbers displayed on the page.
-     * Returns a list so tests can verify specific accounts exist.
+     * Get all account numbers from the account select dropdown.
      */
     public List<String> getAccountNumbers() {
-        List<WebElement> links = driver.findElements(ACCOUNT_LINKS);
-        return links.stream()
+        List<WebElement> options = driver.findElements(ACCOUNT_OPTIONS);
+        return options.stream()
                 .map(WebElement::getText)
                 .filter(text -> !text.isBlank())
                 .toList();
@@ -78,7 +80,6 @@ public class AccountPage extends BasePage {
 
     /**
      * Get the number of accounts displayed.
-     * Useful for verifying a user has the expected number of accounts.
      */
     public int getAccountCount() {
         return getAccountNumbers().size();
@@ -91,36 +92,34 @@ public class AccountPage extends BasePage {
      */
     public void assertOnAccountSummaryPage() {
         waitForUrlToContain("/bank/main.jsp");
-        assertVisible(ACCOUNT_TABLE);
+        assertVisible(ACCOUNT_SELECT);
     }
 
     /**
-     * Assert the welcome message contains the expected username.
-     * Example: assertWelcomeMessageContains("jsmith")
+     * Assert the welcome message contains the expected text.
+     * Example: assertWelcomeMessageContains("John Smith")
      */
     public void assertWelcomeMessageContains(String username) {
         assertTextContains(WELCOME_MESSAGE, username);
     }
 
     /**
-     * Assert that at least one account is displayed.
-     * A logged-in user should always have at least one account.
+     * Assert that at least one account is listed in the account dropdown.
      */
     public void assertAccountsAreDisplayed() {
-        assertVisible(ACCOUNT_LINKS);
+        assertVisible(ACCOUNT_SELECT);
         Assert.assertTrue(getAccountCount() > 0,
                 "Expected at least one account but found none");
     }
 
     public void assertAccountExists(String accountNumber) {
         List<String> accounts = getAccountNumbers();
-        Assert.assertTrue(accounts.contains(accountNumber),
+        Assert.assertTrue(accounts.stream().anyMatch(a -> a.contains(accountNumber)),
                 "Expected account '" + accountNumber + "' but found: " + accounts);
     }
 
     /**
      * Assert the Transfer Funds navigation link is visible.
-     * Verifies the authenticated navigation menu is fully loaded.
      */
     public void assertTransferLinkVisible() {
         assertVisible(NAV_TRANSFER);

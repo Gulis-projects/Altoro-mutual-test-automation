@@ -133,6 +133,17 @@
             <version>${slf4j.version}</version>
         </dependency>
 
+        <!-- ── 7. DOTENV-JAVA ────────────────────────────────────────
+             Reads key=value pairs from a .env file at the project root.
+             Credentials stay out of config.properties and out of git.
+             Usage: copy .env.example → .env and fill in values.
+        -->
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+
     </dependencies>
 
     <!-- ─────────────────────────────────────────────────────────────────

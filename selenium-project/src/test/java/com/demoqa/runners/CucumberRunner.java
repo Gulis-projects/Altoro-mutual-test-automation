@@ -34,8 +34,7 @@ import org.testng.annotations.Parameters;
                 "html:reports/cucumber-report.html",
                 "json:reports/cucumber-report.json"
         },
-        monochrome = false,
-        tags       = "@wip"
+        monochrome = true
 )
 public class CucumberRunner extends AbstractTestNGCucumberTests {
 
@@ -52,12 +51,17 @@ public class CucumberRunner extends AbstractTestNGCucumberTests {
     }
 
     /**
-     * Runs each Cucumber scenario as a separate parallel data row.
-     * Combined with ThreadLocal in DriverManager this gives true
-     * scenario-level parallelism with no shared browser state.
+     * Runs each Cucumber scenario sequentially by default.
+     *
+     * Why sequential: all scenarios use the same demo credentials (jsmith).
+     * Running them in parallel invalidates each other's server sessions on
+     * demo.testfire.net because the app only maintains one session per user.
+     *
+     * Cross-browser parallelism (Chrome vs Firefox vs Edge) is handled at the
+     * TestNG-suite level via testng-cross-browser.xml (-Pcross-browser).
      */
     @Override
-    @DataProvider(parallel = true)
+    @DataProvider(parallel = false)
     public Object[][] scenarios() {
         return super.scenarios();
     }

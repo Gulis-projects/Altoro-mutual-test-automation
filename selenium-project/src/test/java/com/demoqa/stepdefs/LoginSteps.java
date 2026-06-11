@@ -70,4 +70,9 @@ public class LoginSteps {
     public void iShouldBeRedirectedBackToTheLoginPage() {
         loginPage.assertOnLoginPage();
     }
+
+    @Then("the protected page is served without redirecting to login")
+    public void theProtectedPageIsServedWithoutRedirectingToLogin() {
+        loginPage.assertUnauthenticatedPageServed();
+    }
 }

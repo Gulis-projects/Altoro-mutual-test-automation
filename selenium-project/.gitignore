@@ -6,6 +6,9 @@ target/
 reports/
 screenshots/
 
+# Credentials — never commit
+.env
+
 # IDE
 .idea/
 *.iml

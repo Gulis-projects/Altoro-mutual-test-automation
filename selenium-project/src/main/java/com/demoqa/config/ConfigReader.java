@@ -1,78 +1,62 @@
 package com.demoqa.config;
 
+import io.github.cdimascio.dotenv.Dotenv;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
 /**
- * ConfigReader — Reads values from config/config.properties.
+ * ConfigReader — Resolves configuration values in priority order:
+ *   1. JVM system property  (-Dkey=value on the command line)
+ *   2. .env file            (project root, gitignored)
+ *   3. config.properties    (committed defaults / non-sensitive settings)
  *
- * WHY THIS EXISTS:
- * Instead of writing "https://demoqa.com" directly in your test code,
- * you write ConfigReader.get("base.url") everywhere.
- * When the URL changes, you update ONE line in config.properties.
- * This is called "externalized configuration" — a senior pattern.
- *
- * HOW IT WORKS:
- * Java's built-in Properties class reads .properties files
- * as simple key=value pairs. We load the file once when the
- * class is first used (static block), then answer get() calls.
+ * Credentials belong in .env; everything else belongs in config.properties.
+ * Copy .env.example → .env and fill in your values before running tests.
  */
-
 public class ConfigReader {
 
+    private static final Properties properties = new Properties();
+    private static final Dotenv dotenv;
 
+    static {
+        // Load .env silently if missing (no .env in CI is fine — env vars are injected directly)
+        dotenv = Dotenv.configure().ignoreIfMissing().load();
 
-
-        // Properties object holds all key=value pairs from the file
-        private static final Properties properties = new Properties();
-
-        // Static block runs ONCE when the class is first loaded
-        // It opens the file and loads everything into memory
-        static {
-            try {
-                FileInputStream file = new FileInputStream("config/config.properties");
-                properties.load(file);
-                file.close();
-            } catch (IOException e) {
-                throw new RuntimeException(
-                        "Could not load config.properties — make sure the file exists at config/config.properties",
-                        e
-                );
-            }
-        }
-
-        /**
-         * Get a value from config.properties by its key.
-         */
-        public static String get(String key) {
-            String value = System.getProperty(key);
-            if (value == null) {
-                value = properties.getProperty(key);
-            }
-            if (value == null) {
-                throw new RuntimeException(
-                        "Key '" + key + "' not found in system properties or config.properties"
-                );
-            }
-            return value.trim();
-        }
-
-        /**
-         * Get a value as an integer.
-         * Example: ConfigReader.getInt("implicit.wait") returns 10
-         */
-        public static int getInt(String key) {
-            return Integer.parseInt(get(key));
-        }
-
-        /**
-         * Get a value as a boolean.
-         * Example: ConfigReader.getBoolean("headless") returns false
-         */
-        public static boolean getBoolean(String key) {
-            return Boolean.parseBoolean(get(key));
+        try (FileInputStream file = new FileInputStream("config/config.properties")) {
+            properties.load(file);
+        } catch (IOException e) {
+            throw new RuntimeException(
+                "Could not load config/config.properties — make sure the file exists", e);
         }
     }
 
+    public static String get(String key) {
+        // 1. JVM system property (e.g. -Dbrowser=firefox)
+        String value = System.getProperty(key);
+        if (value != null) return value.trim();
 
+        // 2. .env file — convert dotted key to UPPER_SNAKE env-var name
+        //    e.g. "app.username" → "APP_USERNAME"
+        String envKey = key.toUpperCase().replace('.', '_');
+        value = dotenv.get(envKey, null);
+        if (value != null) return value.trim();
+
+        // 3. config.properties fallback
+        value = properties.getProperty(key);
+        if (value == null) {
+            throw new RuntimeException(
+                "Key '" + key + "' not found in system properties, .env (" + envKey + "), or config.properties");
+        }
+        return value.trim();
+    }
+
+    public static int getInt(String key) {
+        return Integer.parseInt(get(key));
+    }
+
+    public static boolean getBoolean(String key) {
+        return Boolean.parseBoolean(get(key));
+    }
+}
